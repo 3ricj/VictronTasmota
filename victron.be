@@ -4,6 +4,7 @@
 # Description:   This is a berrry script for esp32/Tamota which can parse the ascii victron protocol.  It renders it friendly on the console and also sends the untampered raw values over MQTT.  
 # Note that many victron modules use 5volt ttl serial - - which, best I can tell, can be directly plumbed into the esp32 chip I am using. Not all chips will like 5 volts on their GPIO pins, you may need or want a level shifter chip, I didn't. 
 
+# This is based on the VE Direct protocol as of version 3.33. 
 
 import string
 import mqtt
