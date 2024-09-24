@@ -20,7 +20,7 @@ class VICTRON : Driver
   static linefeed = bytes("0D0A")
   
   
-  var last_msg = nil
+  var last_msg
   var initialized
   var serial
   var webstring
@@ -28,7 +28,7 @@ class VICTRON : Driver
   
   
   
-  static label = {
+  static LABEL = {
  	"V": { "Units": "V", "Description": "Main or channel 1 (battery) voltage", "Multiplyer": 0.001 },
 	"V2": { "Units": "mV", "Description": "Channel 2 (battery) voltage" },
 	"V3": { "Units": "mV", "Description": "Channel 3 (battery) voltage" },
@@ -95,7 +95,7 @@ class VICTRON : Driver
   }
 		
 		
-  static error = {
+  static ERR = {
 	0: "No error",
 	2: "Battery voltage too high",
 	17: "Charger temperature too high",
@@ -118,13 +118,13 @@ class VICTRON : Driver
 	119: "User settings invalid"
 
 	}
-	static mptt = {
+	static MPPT = {
 	0: "Off",
 	1: "Voltage or current limited",
 	2: "MPP Tracker active"
 	}
 	
-	static cs = {
+	static CS = {
 	0: "Off",
 	1: "Low power",
 	2: "Fault",
@@ -143,7 +143,7 @@ class VICTRON : Driver
 	}
 
 	
-	static pid = {
+	static PID = {
 	0x2030: "BMV-700",
 	0x2040: "BMV-702",
 	0x2050: "BMV-700H",
@@ -296,11 +296,24 @@ class VICTRON : Driver
 	0xA3F0: "Smart BuckBoost 12V/12V-50A"
 	}
 	
+	static OR = {
+	0x00000001: "No input power",
+	0x00000002: "Switched off (power switch)",
+	0x00000004: "Switched off (device mode register)",
+	0x00000008: "Remote input",
+	0x00000010: "Protection active",
+	0x00000020: "Paygo",
+	0x00000040: "BMS",
+	0x00000080: "Engine shutdown detection",
+	0x00000100: "Analysing input voltage"
+	}
+
+	
 
 
   def init()
-    self.serial  = serial(serial_gpio_rx, serial_gpio_tx, 19200, serial.SERIAL_8N1)
-    self.start
+    self.serial  = serial(self.serial_gpio_rx, self.serial_gpio_tx, 19200, serial.SERIAL_8N1)
+    self.start()
 	
   end
   
@@ -340,19 +353,21 @@ class VICTRON : Driver
 		  if size(i) > 3
 			var linevalue = string.split(i, '\t')
 			if size(linevalue) == 2   # sometimes, it sends us data in "hex" mode, without a tab and starting with a ":".  This forces us to have a name\tvalue pair for processing and ignores this hex data.
-				  if self.label.find(linevalue[0])  # all of the below logic is for decoding some of the values for display locally.  It does not change what is sent over MQTT.
-					description = self.label[linevalue[0]]["Description"]
-					units = self.label[linevalue[0]]["Units"]
-					if self.label[linevalue[0]].find("Multiplyer")
-					  value = real(linevalue[1]) * self.label[linevalue[0]]["Multiplyer"]
-					elif  linevalue[0] == "PID" && self.pid.find(int(linevalue[1]))
-					  value = self.pid.find(int(linevalue[1]))
-					elif  linevalue[0] == "MPPT" && self.mptt.find(int(linevalue[1]))
-					  value = self.mptt.find(int(linevalue[1]))
-					elif  linevalue[0] == "CS" && self.cs.find(int(linevalue[1]))
-					  value = self.cs.find(int(linevalue[1]))
-					elif  linevalue[0] == "ERR" && self.error.find(int(linevalue[1]))
-					  value = self.error.find(int(linevalue[1]))
+				  if self.LABEL.find(linevalue[0])  # all of the below logic is for decoding some of the values for display locally.  It does not change what is sent over MQTT.
+					description = self.LABEL[linevalue[0]]["Description"]
+					units = self.LABEL[linevalue[0]]["Units"]
+					if self.LABEL[linevalue[0]].find("Multiplyer")
+					  value = real(linevalue[1]) * self.LABEL[linevalue[0]]["Multiplyer"]
+					elif  linevalue[0] == "PID" && self.PID.find(int(linevalue[1]))
+					  value = self.PID.find(int(linevalue[1]))
+					elif  linevalue[0] == "OR" && self.OR.find(int(linevalue[1]))
+					  value = self.OR.find(int(linevalue[1]))
+					elif  linevalue[0] == "MPPT" && self.MPPT.find(int(linevalue[1]))
+					  value = self.MPPT.find(int(linevalue[1]))
+					elif  linevalue[0] == "CS" && self.CS.find(int(linevalue[1]))
+					  value = self.CS.find(int(linevalue[1]))
+					elif  linevalue[0] == "ERR" && self.ERR.find(int(linevalue[1]))
+					  value = self.ERR.find(int(linevalue[1]))
 					else
 					  value = linevalue[1]
 					end
