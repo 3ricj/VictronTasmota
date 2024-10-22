@@ -404,8 +404,14 @@ class VICTRON : Driver
 	tasmota.response_append(",\"" + self.sensorname + "\":" + json.dump(self.jsonstring)) 
  end
 
-  def every_50ms()
+  def every_250ms()
     if !self.initialized return nil end
+	
+    if self.last_msg && size(self.last_msg) >= 200
+	  print("ERROR: Hmm, no checksum found, processing anyway")
+      self.process_packet()
+    end
+
     if self.serial.available() == 0
       return
     end
@@ -419,18 +425,9 @@ class VICTRON : Driver
 	  end
     end
 	if string.find(self.last_msg.asstring(), "Checksum") > 0
-#		    print("Checksum found in 50ms loop")
-	self.process_packet()
-	  end
-  end
-
-  def every_500ms()
-    if !self.initialized return nil end
-	if !self.last_msg return nil end
-      if string.find(self.last_msg.asstring(), "Checksum") > 0
-#	    print("Checksum found in 500ms loop")
-	    self.process_packet()
-	  end
+#		    print("Checksum found in 250ms loop")
+	  self.process_packet()
+	end
   end
 
   
@@ -443,6 +440,7 @@ class VICTRON : Driver
       self.process_packet()
     end
   end
+
 end
 
   
